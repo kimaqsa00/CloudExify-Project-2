@@ -1,5 +1,3 @@
-// Clean categories map framework blueprint
-
 const AVAILABLE_CATEGORIES = [
     "AirPods", "Bluetooth Speakers", "Chargers", "Earbuds", "Fast Chargers", 
     "Gaming Accessories", "Headphones", "Smart Watches", "Smartphones", "USB Cables"
