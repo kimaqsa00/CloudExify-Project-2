@@ -921,3 +921,21 @@ function toggleDarkMode() {
         if (btn) btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
     }
 }
+
+function toggleDarkModeTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('kaqsa_dark_mode_active', isDark);
+    updateThemeIconState(isDark);
+}
+
+function updateThemeIconState(isDark) {
+    const icon = document.getElementById('themeIcon');
+    if (icon) {
+        if (isDark) {
+            icon.className = 'fa-solid fa-sun fs-5 text-warning';
+        } else {
+            icon.className = 'fa-solid fa-moon fs-5 text-warning';
+        }
+    }
+}
