@@ -681,6 +681,13 @@ function initiateHoldDownCountdownTimerIntervalLoop() {
 
 function executeOrderFinalizationPayload(event) {
     event.preventDefault(); 
+
+    if (!activeBasket || activeBasket.length === 0) {
+        alert("Cannot place an order with an empty cart!");
+        navigateToView('products');
+        return;
+    }
+
     clearInterval(holdIntervalRef);
     const orderId = Math.floor(7000 + Math.random() * 2999);
     let finalSum = activeBasket.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -711,7 +718,6 @@ function executeOrderFinalizationPayload(event) {
     }
     navigateToView('order-success');
 }
-
 function rebuildHistoricalOrdersLogViewGrid() {
     const node = document.getElementById('historical-orders-container-target');
     if (!node) return;
