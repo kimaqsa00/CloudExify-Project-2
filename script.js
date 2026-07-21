@@ -153,10 +153,10 @@ let runtimeProducts = STORE_PRODUCTS_ARRAY.map((item, i) => {
     else cleanImage = "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=500&q=80";
     
     return {
-    ...item,
-    image: cleanImage,
-    rating: item.rating || (Math.random() * 2 + 3).toFixed(1)
-};
+        ...item,
+        image: cleanImage,
+        rating: item.rating || (Math.random() * 2 + 3).toFixed(1)
+    };
 });
 
 let wishlist = [];
@@ -177,7 +177,6 @@ let modalActiveProductId = null;
 let modalSelectedQuantityValue = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
-
     bootstrapModalObjRef = new bootstrap.Modal(document.getElementById('quantitySelectionModal'));
     
     loadUserCart(); 
@@ -190,72 +189,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     history.replaceState({ view: 'home' }, 'Home', '#home');
     renderViewDOMSwitchState('home', false);
-    if(localStorage.getItem("theme") === "dark"){
-
-    document.body.classList.add("dark-mode");
-
-    const btn = document.getElementById("theme-btn");
-
-    if(btn){
-        btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+    
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark-mode");
+        const btn = document.getElementById("theme-btn");
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+        }
     }
-
-}
 });
-function sortProducts(type){
 
+function sortProducts(type) {
     currentSort = type;
-
     renderMainCatalogGridStructure();
-
 }
-function toggleWishlist(productId){
 
-    if(wishlistItems.includes(productId)){
-
+function toggleWishlist(productId) {
+    if (wishlistItems.includes(productId)) {
         wishlistItems = wishlistItems.filter(id => id !== productId);
-
         showToast("Removed from wishlist");
-
-    }else{
-
+    } else {
         wishlistItems.push(productId);
-
         showToast("Added to wishlist");
-
     }
 
     localStorage.setItem("wishlist", JSON.stringify(wishlistItems));
-
     renderMainCatalogGridStructure();
-    renderWishlist();
-
+    if (typeof renderWishlist === 'function') renderWishlist();
 }
-function isWishlisted(productId){
 
+function isWishlisted(productId) {
     return wishlistItems.includes(productId);
-
 }
-
 
 function navigateToView(viewId) {
     history.pushState({ view: viewId }, viewId, `#${viewId}`);
     renderViewDOMSwitchState(viewId, true);
 }
-function showToast(message){
 
-    const toast=document.getElementById("toast-message");
-
-    toast.innerText=message;
-
+function showToast(message) {
+    const toast = document.getElementById("toast-message");
+    if (!toast) return;
+    toast.innerText = message;
     toast.classList.add("show");
-
-    setTimeout(()=>{
-
+    setTimeout(() => {
         toast.classList.remove("show");
-
-    },2000);
-
+    }, 2000);
 }
 
 function renderViewDOMSwitchState(viewId, scrollSmooth = true) {
@@ -266,12 +245,11 @@ function renderViewDOMSwitchState(viewId, scrollSmooth = true) {
 
     if (viewId === 'products') renderMainCatalogGridStructure();
     else if (viewId === 'cart') rebuildCartInterfaceTableGrid();
-    else if (viewId === "wishlist")
-    renderWishlist();
+    else if (viewId === "wishlist" && typeof renderWishlist === 'function') renderWishlist();
     else if (viewId === 'my-orders') rebuildHistoricalOrdersLogViewGrid();
     else if (viewId === 'home') { renderHomeCategoriesGrid(); renderHomeFeaturedDrops(); }
 
-    updateFooterDesign(viewId);
+    if (typeof updateFooterDesign === 'function') updateFooterDesign(viewId);
 
     if (scrollSmooth) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -281,7 +259,7 @@ function initiateGlobalHeroBannerClockTick() {
     setInterval(() => {
         sec--;
         if (sec < 0) { sec = 59; min--; if (min < 0) { min = 59; hr--; if (hr < 0) { hr = 0; min = 0; sec = 0; } } }
-        if(document.getElementById('drop-clock-hours')) {
+        if (document.getElementById('drop-clock-hours')) {
             document.getElementById('drop-clock-hours').innerText = String(hr).padStart(2, '0');
             document.getElementById('drop-clock-minutes').innerText = String(min).padStart(2, '0');
             document.getElementById('drop-clock-seconds').innerText = String(sec).padStart(2, '0');
@@ -309,7 +287,7 @@ function renderHomeFeaturedDrops() {
 
     target.innerHTML = runtimeProducts.slice(0, 4).map(item => `
         <div class="col-6 col-md-3">
-           <div class="card h-100 store-product-card shadow-sm border bg-white position-relative">
+            <div class="card h-100 store-product-card shadow-sm border bg-white position-relative">
                 <div class="img-canvas-wrapper">
                     <img src="${item.image}" alt="${item.name}">
                 </div>
@@ -328,7 +306,7 @@ function renderHomeFeaturedDrops() {
 function buildCategoryFilterPillsStripRow() {
     const stripContainer = document.getElementById('dynamic-category-pill-strip');
     if (!stripContainer) return;
-    let fullCategoriesOptionsList = ["All", ...AVAILABLE_CATEGORIES];
+    let fullCategoriesOptionsList = ["All", ...(typeof AVAILABLE_CATEGORIES !== 'undefined' ? AVAILABLE_CATEGORIES : [])];
     stripContainer.innerHTML = fullCategoriesOptionsList.map(cat => {
         let activeCSS = (cat === activeCategoryFilter) ? "active" : "";
         return `<button class="btn btn-sm pill-badge ${activeCSS}" onclick="triggerCategoryPillFilter('${cat}')">${cat}</button>`;
@@ -349,45 +327,33 @@ function renderMainCatalogGridStructure() {
     let processingFilteredList = runtimeProducts.filter(
         item => activeCategoryFilter === "All" || item.category === activeCategoryFilter
     );
-    if(currentSort==="low"){
 
-    processingFilteredList.sort((a,b)=>a.price-b.price);
+    if (currentSort === "low") {
+        processingFilteredList.sort((a, b) => a.price - b.price);
+    } else if (currentSort === "high") {
+        processingFilteredList.sort((a, b) => b.price - a.price);
+    } else if (currentSort === "rating") {
+        processingFilteredList.sort((a, b) => (b.rating || 5) - (a.rating || 5));
+    }
 
-}
-
-else if(currentSort==="high"){
-
-    processingFilteredList.sort((a,b)=>b.price-a.price);
-
-}
-
-else if(currentSort==="rating"){
-
-    processingFilteredList.sort((a,b)=>(b.rating||5)-(a.rating||5));
-
-}
-
-   if (document.getElementById('total-count-string-node')) {
-    document.getElementById('total-count-string-node').innerHTML = `
-        <span class="custom-status-text" style="font-family: 'Segoe UI', sans-serif; font-size: 15px; color: #444;">
-            Showing 
-            <span class="badge bg-dark text-warning px-2 py-1 mx-1 rounded-3 fs-6 shadow-sm">
-                ${processingFilteredList.length}
-            </span> 
-            Allocation Instances Available
-        </span>
-    `;
-}
+    if (document.getElementById('total-count-string-node')) {
+        document.getElementById('total-count-string-node').innerHTML = `
+            <span class="custom-status-text" style="font-family: 'Segoe UI', sans-serif; font-size: 15px; color: #444;">
+                Showing 
+                <span class="badge bg-dark text-warning px-2 py-1 mx-1 rounded-3 fs-6 shadow-sm">
+                    ${processingFilteredList.length}
+                </span> 
+                Allocation Instances Available
+            </span>
+        `;
+    }
 
     catalogContainer.innerHTML = processingFilteredList.map(item => `
         <div class="col-6 col-md-3 mb-4">
             <div class="card h-100 store-product-card shadow-sm border bg-white">
-            <button class="wishlist-btn ${isWishlisted(item.id)?'active':''}"
-onclick="toggleWishlist(${item.id})">
-
-${isWishlisted(item.id)?'❤':'♡'}
-
-</button>
+                <button class="wishlist-btn ${isWishlisted(item.id) ? 'active' : ''}" onclick="toggleWishlist(${item.id})">
+                    ${isWishlisted(item.id) ? '❤' : '♡'}
+                </button>
                 <div class="img-canvas-wrapper">
                     <img src="${item.image}" alt="${item.name}">
                 </div>
@@ -445,7 +411,7 @@ function adjustModalQuantityValue(offset) {
 function saveCart() {
     const currentUsername = savedRegProfileMemory ? savedRegProfileMemory.username : 'guest';
     localStorage.setItem(`kaqsa_cart_v5_${currentUsername}`, JSON.stringify(activeBasket));
-    refreshNavigationHeaderControlPanel();
+    if (typeof refreshNavigationHeaderControlPanel === 'function') refreshNavigationHeaderControlPanel();
 }
 
 function addItemToCartWorkspace() {
@@ -472,13 +438,10 @@ function addItemToCartWorkspace() {
         activeBasket.push({ ...product, quantity: modalSelectedQuantityValue });
     }
 
-   saveCart();
-
-showToast("✓ Added to cart");
-
-bootstrapModalObjRef.hide();
-
-navigateToView('cart');
+    saveCart();
+    showToast("✓ Added to cart");
+    bootstrapModalObjRef.hide();
+    navigateToView('cart');
 }
 
 function handleUserRegistration(event) {
@@ -495,7 +458,6 @@ function handleUserRegistration(event) {
         return;
     }
 
-    // First letter capital
     firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
     lastName = lastName.charAt(0).toUpperCase() + lastName.slice(1).toLowerCase();
 
@@ -537,8 +499,11 @@ function handleUserLoginValidation(event) {
         document.getElementById('loginForm').reset();
         refreshNavigationHeaderControlPanel();
         
-        document.getElementById('app-alert-stream').classList.remove('d-none');
-        document.getElementById('alert-payload-message').innerText = `Session verified under token identifier key: ${activeSessionUser.name}.`;
+        const alertStream = document.getElementById('app-alert-stream');
+        if (alertStream) {
+            alertStream.classList.remove('d-none');
+            document.getElementById('alert-payload-message').innerText = `Session verified under token identifier key: ${activeSessionUser.name}.`;
+        }
         navigateToView('home');
     } else {
         alert("Security handshake rejection: Invalid custom credential coordinates.");
@@ -576,19 +541,16 @@ function refreshNavigationHeaderControlPanel() {
                 ${basketBadgeCounterSum}
             </span>
         </a>
-        <button class="btn btn-outline-light border-0 me-2"
-        id="theme-btn"
-        onclick="toggleDarkMode()">
-    <i class="fa-solid fa-moon"></i>
-</button>
+        <button class="btn btn-outline-light border-0 me-2" id="theme-btn" onclick="toggleDarkMode()">
+            <i class="fa-solid fa-moon"></i>
+        </button>
         <div class="dropdown d-inline-block align-middle">
             <button class="btn btn-outline-warning dropdown-toggle border-0 fw-bold px-2 text-capitalize shadow-none d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-    <i class="fa-solid fa-circle-user fs-5 text-warning"></i>
-    <span class="text-white fw-semibold"
-          style="font-family:'Segoe UI', sans-serif; font-size:15px;">
-        ${activeSessionUser.name}
-    </span>
-</button>
+                <i class="fa-solid fa-circle-user fs-5 text-warning"></i>
+                <span class="text-white fw-semibold" style="font-family:'Segoe UI', sans-serif; font-size:15px;">
+                    ${activeSessionUser.name}
+                </span>
+            </button>
             <ul class="dropdown-menu dropdown-menu-end shadow mt-2">
                 <li><a class="dropdown-item py-2 px-3 small text-dark fw-bold" href="#" onclick="navigateToView('cart')"><i class="fa-solid fa-basket-shopping me-2 text-muted"></i>View My Basket</a></li>
                 <li><a class="dropdown-item py-2 px-3 small text-dark fw-bold" href="#" onclick="navigateToView('my-orders')"><i class="fa-solid fa-file-lines me-2 text-muted"></i>My Orders Log</a></li>
@@ -707,7 +669,9 @@ function initiateHoldDownCountdownTimerIntervalLoop() {
     holdIntervalRef = setInterval(() => {
         holdTimerCountdown--;
         let m = Math.floor(holdTimerCountdown / 60), s = holdTimerCountdown % 60;
-        outputNode.innerText = `Allocation Hold Time Remaining: ${m}:${s < 10 ? '0' : ''}${s}`;
+        if (outputNode) {
+            outputNode.innerText = `Allocation Hold Time Remaining: ${m}:${s < 10 ? '0' : ''}${s}`;
+        }
         if (holdTimerCountdown <= 0) {
             clearInterval(holdIntervalRef); alert("Allocation frame timed out."); activeBasket = [];
             saveCart(); navigateToView('home');
@@ -737,11 +701,14 @@ function executeOrderFinalizationPayload(event) {
     activeBasket = []; 
     saveCart();
 
-    document.getElementById('success-invoice-box-summary').innerHTML = `
-        <div class="mb-1"><strong>Manifest ID Key:</strong> #${orderId}</div>
-        <div class="mb-1"><strong>Financial Weight Total:</strong> Rs. ${finalSum.toLocaleString()}</div>
-        <div><strong>Gateway Route Channel:</strong> Cash on Delivery (COD)</div>
-    `;
+    const summaryBox = document.getElementById('success-invoice-box-summary');
+    if (summaryBox) {
+        summaryBox.innerHTML = `
+            <div class="mb-1"><strong>Manifest ID Key:</strong> #${orderId}</div>
+            <div class="mb-1"><strong>Financial Weight Total:</strong> Rs. ${finalSum.toLocaleString()}</div>
+            <div><strong>Gateway Route Channel:</strong> Cash on Delivery (COD)</div>
+        `;
+    }
     navigateToView('order-success');
 }
 
@@ -771,11 +738,14 @@ function rebuildHistoricalOrdersLogViewGrid() {
     `).join('');
 }
 
-function hideNotificationBar() { document.getElementById('app-alert-stream').classList.add('d-none'); }
+function hideNotificationBar() { 
+    const alertStream = document.getElementById('app-alert-stream');
+    if (alertStream) alertStream.classList.add('d-none'); 
+}
 
-function showProductDetails(productId){
+function showProductDetails(productId) {
     const product = runtimeProducts.find(p => p.id === productId);
-    if(!product) return;
+    if (!product) return;
 
     document.getElementById("details-image").src = product.image;
     document.getElementById("details-category").innerText = product.category;
@@ -792,10 +762,13 @@ function showProductDetails(productId){
     navigateToView("product-details");
 }
 
-function renderRelatedProducts(category, id){
+function renderRelatedProducts(category, id) {
     let list = runtimeProducts.filter(p => p.category === category && p.id !== id).slice(0, 4);
 
-    document.getElementById("related-products-row").innerHTML = list.map(item => `
+    const relatedRow = document.getElementById("related-products-row");
+    if (!relatedRow) return;
+
+    relatedRow.innerHTML = list.map(item => `
         <div class="col-6 col-md-3 mb-4">
             <div class="card h-100 store-product-card shadow-sm border bg-white">
                 <div class="img-canvas-wrapper">
@@ -812,7 +785,6 @@ function renderRelatedProducts(category, id){
         </div>
     `).join("");
 }
-
 
 function updateFooterDesign(viewId) {
     const footerContainer = document.getElementById('footer-content-container');
@@ -841,8 +813,8 @@ function updateFooterDesign(viewId) {
             </div>
             <hr class="border-secondary my-4">
             <div class="text-center text-white-50 size-11">
-    &copy; 2026 K.AQSA Limited Drop Architecture Engine Panel. CloudExify Intern Systems Grid.
-</div>
+                &copy; 2026 K.AQSA Limited Drop Architecture Engine Panel. CloudExify Intern Systems Grid.
+            </div>
         `;
     } else {
         footerContainer.innerHTML = `
@@ -872,10 +844,9 @@ function loadUserCart() {
     refreshNavigationHeaderControlPanel();
     if (typeof rebuildCartInterfaceTableGrid === 'function') rebuildCartInterfaceTableGrid();
 }
+
 function renderWishlist() {
-
     const container = document.getElementById("wishlist-products-row");
-
     if (!container) return;
 
     const wishlistProducts = runtimeProducts.filter(product =>
@@ -883,130 +854,64 @@ function renderWishlist() {
     );
 
     if (wishlistProducts.length === 0) {
-
         container.innerHTML = `
             <div class="col-12 text-center py-5">
                 <h4>Your wishlist is empty.</h4>
             </div>
         `;
-
         return;
     }
 
     container.innerHTML = wishlistProducts.map(item => `
-
         <div class="col-6 col-md-3 mb-4">
-
             <div class="card h-100 store-product-card shadow-sm border bg-white">
-
-                <button
-                    class="wishlist-btn active"
-                    onclick="toggleWishlist(${item.id}); renderWishlist();">
-
+                <button class="wishlist-btn active" onclick="toggleWishlist(${item.id}); renderWishlist();">
                     ❤
-
                 </button>
-
                 <div class="img-canvas-wrapper">
-
                     <img src="${item.image}" alt="${item.name}">
-
                 </div>
-
                 <div class="card-body">
-
                     <span class="product-category">${item.category}</span>
-
                     <h5 class="product-name">${item.name}</h5>
-
-                    <div class="product-price">
-
-                        Rs. ${item.price.toLocaleString()}
-
-                    </div>
-
-                    <div class="stock-box">
-
-                        In Stock
-
-                    </div>
-
-                    <button
-                        class="view-btn"
-                        onclick="showProductDetails(${item.id})">
-
-                        View Details
-
-                    </button>
-
+                    <div class="product-price">Rs. ${item.price.toLocaleString()}</div>
+                    <div class="stock-box">In Stock</div>
+                    <button class="view-btn" onclick="showProductDetails(${item.id})">View Details</button>
                 </div>
-
             </div>
-
         </div>
-
     `).join("");
-
 }
-function applyCoupon() {
 
-    const code = document
-        .getElementById("coupon-code")
-        .value
-        .trim()
-        .toUpperCase();
+function applyCoupon() {
+    const couponInput = document.getElementById("coupon-code");
+    if (!couponInput) return;
+
+    const code = couponInput.value.trim().toUpperCase();
 
     if (code === "SAVE10") {
-
         discountPercent = 10;
-
-    }
-
-    else if (code === "SAVE20") {
-
+    } else if (code === "SAVE20") {
         discountPercent = 20;
-
-    }
-
-    else if (code === "WELCOME15") {
-
+    } else if (code === "WELCOME15") {
         discountPercent = 15;
-
-    }
-
-    else {
-
+    } else {
         alert("Invalid Coupon Code");
-
         discountPercent = 0;
-
     }
 
     rebuildCartInterfaceTableGrid();
-
 }
-function toggleDarkMode(){
 
+function toggleDarkMode() {
     document.body.classList.toggle("dark-mode");
-
     const btn = document.getElementById("theme-btn");
 
-    if(document.body.classList.contains("dark-mode")){
-
-        localStorage.setItem("theme","dark");
-
-        if(btn){
-            btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
-        }
-
-    }else{
-
-        localStorage.setItem("theme","light");
-
-        if(btn){
-            btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
-        }
-
+    if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("theme", "dark");
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+    } else {
+        localStorage.setItem("theme", "light");
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
     }
-
 }
